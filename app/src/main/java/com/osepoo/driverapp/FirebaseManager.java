@@ -1,16 +1,20 @@
 package com.osepoo.driverapp;
+
+import android.location.Location;
 import android.util.Log;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.FirebaseDatabase;
+import java.util.Locale;
 
 public class FirebaseManager {
     private static final String TAG = "FirebaseManager";
 
     // Firebase authentication instance
-    private FirebaseAuth firebaseAuth = FirebaseAuth.getInstance();
+    private final FirebaseAuth firebaseAuth = FirebaseAuth.getInstance();
 
-    // Counter for generating sequential user and driver IDs
-    private int idCounter = 0;
+    // Firebase Realtime Database instance
+    private final FirebaseDatabase firebaseDatabase = FirebaseDatabase.getInstance();
 
     // Sign in with email and password
     public void signInWithEmailAndPassword(String email, String password, AuthCallback callback) {
@@ -19,7 +23,7 @@ public class FirebaseManager {
                     if (task.isSuccessful()) {
                         FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
                         if (currentUser != null) {
-                            String userId = generateId();
+                            String userId = currentUser.getUid();
                             callback.onSuccess(userId);
                         }
                     } else {
@@ -29,11 +33,9 @@ public class FirebaseManager {
                 });
     }
 
-    // Generate sequential user and driver ID
-    private String generateId() {
-        String formattedId = String.format("%04d", idCounter);
-        idCounter++; // Increment counter for the next user and driver
-        return formattedId;
+    // Update user location in Firebase
+    public void updateUserLocation(String userId, Location location) {
+        firebaseDatabase.getReference("users").child(userId).setValue(location);
     }
 
     // Callback interface for authentication

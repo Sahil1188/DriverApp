@@ -16,10 +16,6 @@ public class MainActivity extends AppCompatActivity {
     TextInputEditText editTextEmail, editTextPassword;
     Button signIn;
     FirebaseAuth firebaseAuth = FirebaseAuth.getInstance();
-    private static final String EXTRA_DRIVER_ID = "DRIVER_ID";
-
-    // Initialize FirebaseManager
-    FirebaseManager firebaseManager = new FirebaseManager();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,28 +40,19 @@ public class MainActivity extends AppCompatActivity {
             }
 
             // Use FirebaseManager for authentication
-            firebaseManager.signInWithEmailAndPassword(email, password, new AuthCallback() {
-                @Override
-                public void onSuccess(String userId) {
-                    // Now you have a unique user ID (userId)
-                    // Proceed with storing the user ID and handling driver IDs.
-
-                    // Use FirebaseHelper to store user and driver data
-                    FirebaseHelper firebaseHelper = new FirebaseHelper();
-                    int driverId = Integer.parseInt(userId); // Assuming user ID and driver ID are the same
-                    firebaseHelper.storeUserAndLocationData(userId, driverId, 0.0, 0.0); // Set initial location coordinates
-
-                    Intent intent = new Intent(MainActivity.this, HomePage.class);
-                    intent.putExtra(EXTRA_DRIVER_ID, driverId);
-                    startActivity(intent);
-                    finish();
-                }
-
-                @Override
-                public void onFailure(Exception e) {
-                    Toast.makeText(MainActivity.this, "Login Failed", Toast.LENGTH_SHORT).show();
-                }
-            });
+            firebaseAuth.signInWithEmailAndPassword(email, password)
+                    .addOnCompleteListener(this, task -> {
+                        if (task.isSuccessful()) {
+                            // Sign in success, go to Home Page
+                            Intent intent = new Intent(MainActivity.this, HomePage.class);
+                            startActivity(intent);
+                            finish();
+                        } else {
+                            // If sign in fails, display a message to the user.
+                            Toast.makeText(MainActivity.this, "Authentication failed.",
+                                    Toast.LENGTH_SHORT).show();
+                        }
+                    });
         });
     }
 }

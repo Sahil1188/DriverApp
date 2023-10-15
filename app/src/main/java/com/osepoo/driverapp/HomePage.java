@@ -1,66 +1,52 @@
+// HomePage.java
+
 package com.osepoo.driverapp;
-import android.Manifest;
-import android.annotation.SuppressLint;
+
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Bundle;
 import android.os.Looper;
-import android.provider.Settings;
-import android.view.View;
-import android.widget.Button;
-import android.widget.TextView;
+import android.util.Log;
 import android.widget.Toast;
+import android.Manifest;
+import com.google.android.gms.location.LocationRequest;
+
+
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SwitchCompat;
 import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
-import com.google.android.gms.location.LocationRequest;
+
 import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
+import com.google.firebase.FirebaseApp;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
-import com.osepoo.driverapp.helper.FirebaseHelper;
-import com.osepoo.driverapp.helper.GoogleMapHelper;
-import com.osepoo.driverapp.helper.MarkerAnimationHelper;
-import com.osepoo.driverapp.helper.UiHelper;
-import com.osepoo.driverapp.interfaces.LatLngInterpolator;
-import com.osepoo.driverapp.model.Driver;
 
 import java.util.concurrent.atomic.AtomicBoolean;
-
-import com.google.firebase.auth.AuthResult;
-
 
 public class HomePage extends AppCompatActivity {
 
     private static final int MY_PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 2161;
 
-    private final GoogleMapHelper googleMapHelper = new GoogleMapHelper();
-    private final AtomicBoolean driverOnlineFlag = new AtomicBoolean(false);
-
     private GoogleMap googleMap;
     private Marker currentPositionMarker;
     private FusedLocationProviderClient locationProviderClient;
-    private UiHelper uiHelper;
     private LocationRequest locationRequest;
-    private TextView driverStatusTextView;
     private boolean locationFlag = true;
 
-    private int driverId;
-    private static final String DRIVER_ID = "0000"; // Id must be unique for every driver.
-
-    private final FirebaseHelper firebaseHelper = new FirebaseHelper(DRIVER_ID);
+    private final AtomicBoolean driverOnlineFlag = new AtomicBoolean(false);
 
     private final LocationCallback locationCallback = new LocationCallback() {
         @Override
@@ -72,86 +58,93 @@ public class HomePage extends AppCompatActivity {
                 locationFlag = false;
                 animateCamera(location);
             }
-            if (driverOnlineFlag.get())
-               firebaseHelper.updateDriver(new Driver(location.getLatitude(), location.getLongitude(), DRIVER_ID));
+            if (driverOnlineFlag.get()) {
+                // Update location in Firebase or perform any other actions
+                Log.d("DriverApp", "Driver online, updating location");
+            }
             showOrAnimateMarker(location);
-
         }
     };
 
-    @SuppressLint("MissingInflatedId")
     @Override
-    protected void onCreate(@Nullable Bundle savedInstanceState) {
+    protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home_page2);
-        driverId = Integer.parseInt(getIntent().getStringExtra("DRIVER_ID"));
-        Button btnBack = findViewById(R.id.btnBack);
+        FirebaseApp.initializeApp(this);
+
+        locationProviderClient = LocationServices.getFusedLocationProviderClient(this);
 
 
-        btnBack.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                // Create an intent to navigate back to the EntryActivity
-                Intent intent = new Intent(HomePage.this, MainActivity.class);
-                startActivity(intent);
-                finish(); // Optional: Finish the current activity
-            }
-        });
 
+        FirebaseAuth auth = FirebaseAuth.getInstance();
+        if (auth.getCurrentUser() == null) {
+            Intent mainIntent = new Intent(HomePage.this, MainActivity.class);
+            startActivity(mainIntent);
+            finish();
+            return;
+        }
 
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.supportMap);
         assert mapFragment != null;
-        uiHelper = new UiHelper(this);
-        mapFragment.getMapAsync(googleMap -> this.googleMap = googleMap);
-        locationProviderClient = LocationServices.getFusedLocationProviderClient(this);
-        locationRequest = uiHelper.getLocationRequest();
-        if (!uiHelper.isPlayServicesAvailable()) {
-            Toast.makeText(this, "Play Services did not install!", Toast.LENGTH_SHORT).show();
-            finish();
-        } else {
-            requestLocationUpdates();
-        }
+        mapFragment.getMapAsync(new OnMapReadyCallback() {
+            @Override
+            public void onMapReady(@NonNull GoogleMap googleMap) {
+                HomePage.this.googleMap = googleMap;
+                locationProviderClient = LocationServices.getFusedLocationProviderClient(HomePage.this);
+                if (checkAndRequestLocationPermission()) {
+                    locationRequest = getLocationRequest();
+                    requestLocationUpdates();
+                }
 
-        SwitchCompat driverStatusSwitch = findViewById(R.id.driverStatusSwitch);
-        driverStatusTextView = findViewById(R.id.driverStatusTextView);
-
-        driverStatusSwitch.setOnCheckedChangeListener((buttonView, b) -> {
-            driverOnlineFlag.set(b);
-            if (b)
-                driverStatusTextView.setText(getResources().getString(R.string.online));
-            else {
-                driverStatusTextView.setText(getResources().getString(R.string.offline));
-                firebaseHelper.deleteDriver();
+                SwitchCompat driverStatusSwitch = findViewById(R.id.driverStatusSwitch);
+                driverStatusSwitch.setOnCheckedChangeListener((buttonView, b) -> {
+                    driverOnlineFlag.set(b);
+                    if (b)
+                        Toast.makeText(HomePage.this, getResources().getString(R.string.online), Toast.LENGTH_SHORT).show();
+                    else {
+                        Toast.makeText(HomePage.this, getResources().getString(R.string.offline), Toast.LENGTH_SHORT).show();
+                        // Update status in Firebase or perform any other actions
+                    }
+                });
             }
         });
     }
 
+
     private void animateCamera(Location location) {
-        CameraUpdate cameraUpdate = googleMapHelper.buildCameraUpdate(new LatLng(location.getLatitude(), location.getLongitude()));
+        LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
+        CameraUpdate cameraUpdate = com.google.android.gms.maps.CameraUpdateFactory.newLatLngZoom(latLng, 15);
         googleMap.animateCamera(cameraUpdate);
     }
 
-    @SuppressLint("MissingPermission")
-    private void requestLocationUpdates() {
-        if (!uiHelper.isHaveLocationPermission()) {
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
-                    MY_PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION);
-            return;
+    private void showOrAnimateMarker(Location location) {
+        LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
+        if (currentPositionMarker == null) {
+            currentPositionMarker = googleMap.addMarker(new com.google.android.gms.maps.model.MarkerOptions().position(latLng));
+        } else {
+            currentPositionMarker.setPosition(latLng);
         }
-        if (uiHelper.isLocationProviderEnabled())
-            uiHelper.showPositiveDialogWithListener(this, getResources().getString(R.string.need_location), getResources().getString(R.string.location_content), () -> startActivity(new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)), "Turn On", false);
-        locationProviderClient.requestLocationUpdates(locationRequest, locationCallback, Looper.myLooper());
     }
 
-    private void showOrAnimateMarker(Location location) {
-        if (currentPositionMarker == null)
-            currentPositionMarker = googleMap.addMarker(googleMapHelper.getDriverMarkerOptions(location));
-        else
-            MarkerAnimationHelper.animateMarkerToGB(
-                    currentPositionMarker,
-                    new LatLng(location.getLatitude(),
-                            location.getLongitude()),
-                    new LatLngInterpolator.Spherical());
+    private LocationRequest getLocationRequest() {
+        return LocationRequest.create()
+                .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
+                .setInterval(5000)
+                .setFastestInterval(2000);
+    }
+
+
+
+    private boolean checkAndRequestLocationPermission() {
+        if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this,
+                    new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION},
+                    MY_PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION);
+            return false;  // Permission not granted
+        } else {
+            return true;  // Permission already granted
+        }
     }
 
 
@@ -159,15 +152,37 @@ public class HomePage extends AppCompatActivity {
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == MY_PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION) {
-            int value = grantResults[0];
-            if (value == PackageManager.PERMISSION_DENIED) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                requestLocationUpdates();
+            } else {
                 Toast.makeText(this, "Location Permission denied", Toast.LENGTH_SHORT).show();
                 finish();
-            } else if (value == PackageManager.PERMISSION_GRANTED) requestLocationUpdates();
+            }
         }
     }
+
+    private void requestLocationUpdates() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                == PackageManager.PERMISSION_GRANTED) {
+            locationProviderClient.requestLocationUpdates(locationRequest, locationCallback, Looper.myLooper());
+        } else {
+            // You don't have the permission, request it
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                    MY_PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION);
+        }
+    }
+
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        requestLocationUpdates();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        locationProviderClient.removeLocationUpdates(locationCallback);
+    }
 }
-
-
-
-
