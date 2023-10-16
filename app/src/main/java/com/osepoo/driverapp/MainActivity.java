@@ -13,7 +13,7 @@ import com.google.firebase.auth.FirebaseAuth;
 public class MainActivity extends AppCompatActivity {
 
     TextInputEditText editTextEmail, editTextPassword;
-    Button signIn, signUp; // Add a reference to the "Sign Up" button
+    Button signIn, signUp, forgotPassword; // Add a reference to the "Sign Up" button
     FirebaseAuth firebaseAuth = FirebaseAuth.getInstance();
 
     @Override
@@ -28,7 +28,8 @@ public class MainActivity extends AppCompatActivity {
         editTextEmail = findViewById(R.id.email);
         editTextPassword = findViewById(R.id.password);
         signIn = findViewById(R.id.signin);
-        signUp = findViewById(R.id.signup); // Assuming you have a "Sign Up" button with the id "signup"
+        signUp = findViewById(R.id.signup);
+        forgotPassword = findViewById(R.id.forgot_password); // Assuming you have a "Forgot Password" button with the id "forgot_password"
 
         signIn.setOnClickListener(view -> {
             String email = String.valueOf(editTextEmail.getText());
@@ -58,6 +59,12 @@ public class MainActivity extends AppCompatActivity {
         signUp.setOnClickListener(view -> {
             // Navigate to the RegisterPage activity when "Sign Up" is clicked
             Intent intent = new Intent(MainActivity.this, RegisterPage.class);
+            startActivity(intent);
+        });
+
+        forgotPassword.setOnClickListener(view -> {
+            // Navigate to the ForgotPasswordActivity when "Forgot Password" is clicked
+            Intent intent = new Intent(MainActivity.this, ForgotPasswordActivity.class);
             startActivity(intent);
         });
     }
