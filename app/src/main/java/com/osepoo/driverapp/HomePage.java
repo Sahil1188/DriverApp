@@ -11,18 +11,15 @@ import android.util.Log;
 import android.widget.Toast;
 import android.Manifest;
 import com.google.android.gms.location.LocationRequest;
-
-
-
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SwitchCompat;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
-
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
-
 import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdate;
@@ -57,6 +54,13 @@ public class HomePage extends AppCompatActivity {
             if (locationFlag) {
                 locationFlag = false;
                 animateCamera(location);
+            }
+            FirebaseAuth auth = FirebaseAuth.getInstance();
+            if (auth.getCurrentUser() != null) {
+                String userId = auth.getCurrentUser().getUid();
+                DatabaseReference userLocationReference = FirebaseDatabase.getInstance().getReference("users").child(userId);
+                userLocationReference.child("latitude").setValue(location.getLatitude());
+                userLocationReference.child("longitude").setValue(location.getLongitude());
             }
             if (driverOnlineFlag.get()) {
                 // Update location in Firebase or perform any other actions
@@ -127,11 +131,15 @@ public class HomePage extends AppCompatActivity {
     }
 
     private LocationRequest getLocationRequest() {
-        return LocationRequest.create()
-                .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
-                .setInterval(5000)
-                .setFastestInterval(2000);
+        LocationRequest locationRequest = new LocationRequest();
+        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+        locationRequest.setInterval(5000);
+        locationRequest.setFastestInterval(2000);
+        return locationRequest;
     }
+
+
+
 
 
 
