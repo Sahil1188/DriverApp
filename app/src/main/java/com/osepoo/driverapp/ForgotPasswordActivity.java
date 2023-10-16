@@ -1,5 +1,6 @@
 package com.osepoo.driverapp;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.View;
@@ -15,7 +16,7 @@ import com.google.firebase.auth.FirebaseAuth;
 public class ForgotPasswordActivity extends AppCompatActivity {
 
     private TextInputEditText emailEditText;
-    private Button resetPasswordButton;
+    private Button resetPasswordButton , btnback;
     private FirebaseAuth firebaseAuth;
 
     @Override
@@ -27,6 +28,14 @@ public class ForgotPasswordActivity extends AppCompatActivity {
 
         emailEditText = findViewById(R.id.forgot_email);
         resetPasswordButton = findViewById(R.id.reset_password_button);
+        btnback= findViewById(R.id.btn_Back);
+        btnback.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(ForgotPasswordActivity.this, MainActivity.class);
+                startActivity(intent);
+            }
+        });
 
         resetPasswordButton.setOnClickListener(new View.OnClickListener() {
             @Override
