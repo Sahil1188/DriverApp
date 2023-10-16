@@ -63,7 +63,7 @@
         android:textStyle="bold"
         android:textSize="20sp"
         android:text="@string/Login"
-        android:layout_marginTop="50dp">
+        android:layout_marginTop="25dp">
     </Button>
 
     <!-- "Forgot Password" button -->
@@ -91,13 +91,14 @@
             android:textStyle="bold"
             android:textSize="15sp"/>
 
-        <TextView
+        <Button
             android:id="@+id/signup"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/Sing_up"
             android:textSize="15sp"
             android:textColor="@color/blue"
+            android:background="@android:color/transparent"
             android:layout_marginStart="5sp"/>
 
     </LinearLayout>

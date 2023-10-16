@@ -28,14 +28,14 @@
     <com.google.android.material.textfield.TextInputLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="150dp"
+        android:layout_marginTop="100dp"
         style="@style/Widget.Material3.AutoCompleteTextView.OutlinedBox">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/userId"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="@string/user_id"
+            android:hint="Email"
             android:inputType="text"/>
 
 
@@ -58,14 +58,14 @@
     </com.google.android.material.textfield.TextInputLayout>
 
     <Button
+        android:id="@+id/signup1"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:id="@+id/signup1"
-        android:textStyle="bold"
-        android:textSize="20sp"
+        android:layout_marginTop="25dp"
         android:text="@string/Sing_in"
+        android:textSize="20sp"
 
-        android:layout_marginTop="50dp">
+        android:textStyle="bold">
 
     </Button>
 

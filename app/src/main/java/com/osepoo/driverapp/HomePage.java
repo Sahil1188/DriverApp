@@ -75,6 +75,10 @@ public class HomePage extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home_page2);
         FirebaseApp.initializeApp(this);
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().hide();
+            getSupportActionBar().setDisplayShowTitleEnabled(false);
+        }
 
         locationProviderClient = LocationServices.getFusedLocationProviderClient(this);
 

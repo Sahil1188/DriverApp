@@ -9,12 +9,11 @@ import android.widget.Button;
 import android.widget.Toast;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.firebase.auth.FirebaseAuth;
-import com.osepoo.driverapp.FirebaseManager.AuthCallback;
 
 public class MainActivity extends AppCompatActivity {
 
     TextInputEditText editTextEmail, editTextPassword;
-    Button signIn;
+    Button signIn, signUp; // Add a reference to the "Sign Up" button
     FirebaseAuth firebaseAuth = FirebaseAuth.getInstance();
 
     @Override
@@ -29,6 +28,7 @@ public class MainActivity extends AppCompatActivity {
         editTextEmail = findViewById(R.id.email);
         editTextPassword = findViewById(R.id.password);
         signIn = findViewById(R.id.signin);
+        signUp = findViewById(R.id.signup); // Assuming you have a "Sign Up" button with the id "signup"
 
         signIn.setOnClickListener(view -> {
             String email = String.valueOf(editTextEmail.getText());
@@ -53,6 +53,12 @@ public class MainActivity extends AppCompatActivity {
                                     Toast.LENGTH_SHORT).show();
                         }
                     });
+        });
+
+        signUp.setOnClickListener(view -> {
+            // Navigate to the RegisterPage activity when "Sign Up" is clicked
+            Intent intent = new Intent(MainActivity.this, RegisterPage.class);
+            startActivity(intent);
         });
     }
 }
